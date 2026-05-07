@@ -1,0 +1,5 @@
+# lambda/cost_reporter/requirements.txt
+# boto3 is pre-installed in Lambda runtime — no need to bundle it
+# Only list third-party dependencies here
+
+# (empty — boto3 and urllib are built-in to Python 3.11 Lambda runtime)
