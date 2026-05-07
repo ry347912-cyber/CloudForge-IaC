@@ -1,0 +1,32 @@
+# ansible/roles/app/templates/app.service.j2
+[Unit]
+Description=Cloud IaC Demo App (Gunicorn)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=appuser
+Group=appuser
+WorkingDirectory=/opt/app
+EnvironmentFile=/opt/app/.env
+
+# Gunicorn: 2 workers per CPU, bind to 8080
+ExecStart=/usr/local/bin/gunicorn \
+    --workers 2 \
+    --bind 0.0.0.0:{{ app_port }} \
+    --timeout 30 \
+    --access-logfile /var/log/app_access.log \
+    --error-logfile /var/log/app_error.log \
+    app:app
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
