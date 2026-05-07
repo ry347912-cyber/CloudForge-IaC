@@ -1,0 +1,48 @@
+# ansible/playbooks/site.yml
+---
+- name: Configure all app servers
+  hosts: app_servers
+  become: yes
+  gather_facts: yes
+
+  vars:
+    app_port: 8080
+    app_user: appuser
+    nginx_worker_processes: auto
+
+  pre_tasks:
+    - name: Wait for EC2 instances to be ready
+      wait_for_connection:
+        timeout: 120
+        delay: 10
+
+    - name: Gather facts after connection
+      setup:
+
+  roles:
+    - common
+    - nginx
+    - app
+
+  post_tasks:
+    - name: Verify Nginx is running
+      service:
+        name: nginx
+        state: started
+      register: nginx_status
+
+    - name: Health check — app endpoint
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        method: GET
+        status_code: 200
+      retries: 5
+      delay: 5
+      register: health_result
+
+    - name: Print deployment summary
+      debug:
+        msg: |
+          ✅ Server {{ inventory_hostname }} configured successfully
+          🌐 Nginx: {{ nginx_status.state }}
+          💚 Health: {{ health_result.status }}
