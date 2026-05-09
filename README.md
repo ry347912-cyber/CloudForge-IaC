@@ -1,4 +1,5 @@
 # ☁️ Cloud Infrastructure Automation Platform
+![CloudForge IaC Banner](cloudforge-iac-banner.png)
 ### Terraform + Ansible + AWS + FinOps Cost Intelligence Dashboard
 
 ![Terraform](https://img.shields.io/badge/Terraform-1.7-7B42BC?style=flat-square&logo=terraform)
@@ -12,7 +13,7 @@
 ---
 
 ## 🏗️ Architecture
-
+![Three-Tier AWS Architecture](three-tier-aws-architecture.png.png)
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        AWS Account                              │
@@ -155,6 +156,7 @@ cloud-iac-project/
 | `ec2` | Launch Template, Auto Scaling Group (min 1, max 3), EC2 Key Pair |
 | `rds` | PostgreSQL 15, Multi-AZ, automated backups, parameter group |
 | `alb` | Application Load Balancer, HTTP/HTTPS listener, target group, health checks |
+![Modular Infrastructure](modular-infrastructure.png)
 
 ---
 
@@ -186,9 +188,10 @@ cloud-iac-project/
 
 **"Tell me about your FinOps feature"**
 > Lambda polls Cost Explorer after every apply, calculates per-service cost and posts structured breakdown to Slack. Dashboard on S3 shows 7-day cost trend. No engineer should deploy blind to cost.
-
+![Real-Time Cost Monitoring](real-time-cost-monitoring.png)
 ---
 
 ## 🛠️ Tech Stack
 
 `Terraform 1.7` · `AWS EC2` · `AWS RDS PostgreSQL` · `AWS VPC` · `AWS ALB` · `AWS Lambda` · `AWS S3` · `AWS IAM` · `AWS Cost Explorer API` · `Ansible 2.15` · `Python 3.11 (boto3)` · `Nginx` · `GitHub Actions`
+![Project Tech Stack](project-tech-stack.png)
