@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudForge-IaC | Cloud Infrastructure Automation</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #030712;
+    --bg2: #0a0f1e;
+    --bg3: #0d1628;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --green: #22c55e;
+    --purple: #a855f7;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: #1e293b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed; top:0; left:0;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(249,115,22,0.4);
+    border-radius: 50%;
+    position: fixed; top:0; left:0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+  }
+  body::before {
+    content:'';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; padding: 2rem;
+    text-align: center; z-index: 1;
+  }
+  .hero-glow {
+    position: absolute; width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    pointer-events: none;
+    animation: pulse-glow 4s ease-in-out infinite alternate;
+  }
+  @keyframes pulse-glow {
+    from { opacity:0.6; transform: translate(-50%,-50%) scale(1); }
+    to { opacity:1; transform: translate(-50%,-50%) scale(1.1); }
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 100px; padding: 6px 18px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+    color: var(--accent2); letter-spacing: 0.1em; margin-bottom: 2rem;
+    animation: fadeDown 0.8s ease both;
+  }
+  .badge-dot { width:7px; height:7px; background:var(--green); border-radius:50%; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  h1 {
+    font-size: clamp(3rem, 8vw, 7rem); font-weight: 800;
+    line-height: 1; letter-spacing: -0.03em;
+    animation: fadeUp 0.9s ease both 0.1s;
+  }
+  h1 span { color: var(--accent); }
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: clamp(1rem, 2.5vw, 1.3rem); color: var(--muted);
+    max-width: 600px; margin: 1.5rem auto 0; line-height: 1.6;
+    font-weight: 400; animation: fadeUp 0.9s ease both 0.2s;
+  }
+  .hero-tags {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin: 2rem 0; animation: fadeUp 0.9s ease both 0.3s;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    padding: 5px 14px; border-radius: 4px; letter-spacing: 0.05em;
+  }
+  .tag-tf { background: rgba(123,66,188,0.15); border: 1px solid rgba(123,66,188,0.4); color: #a78bfa; }
+  .tag-aws { background: rgba(255,153,0,0.1); border: 1px solid rgba(255,153,0,0.3); color: #fbbf24; }
+  .tag-ans { background: rgba(238,0,0,0.1); border: 1px solid rgba(238,0,0,0.3); color: #f87171; }
+  .tag-py { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #60a5fa; }
+  .tag-λ { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); color: var(--cyan); }
+  .hero-btns {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.9s ease both 0.4s;
+  }
+  .btn-primary, .btn-ghost {
+    padding: 14px 32px; border-radius: 6px;
+    font-family: 'Space Mono', monospace; font-size: 0.82rem;
+    letter-spacing: 0.05em; cursor: pointer; text-decoration: none;
+    transition: all 0.25s; border: none;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary {
+    background: var(--accent); color: #000; font-weight: 700;
+    box-shadow: 0 0 30px rgba(249,115,22,0.3);
+  }
+  .btn-primary:hover { background: var(--accent2); box-shadow: 0 0 50px rgba(249,115,22,0.5); transform: translateY(-2px); }
+  .btn-ghost {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+  .scroll-hint {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+    color: var(--muted); letter-spacing: 0.1em;
+    animation: fadeIn 1s ease both 1s;
+  }
+  .scroll-arrow { animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(6px);} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:none;} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px);} to{opacity:1;transform:none;} }
+  @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+  /* COMMON */
+  section { position: relative; z-index: 1; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+    color: var(--accent); letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::before { content:''; width:30px; height:1px; background:var(--accent); display:inline-block; }
+  .section-title {
+    font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+    letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 1rem;
+  }
+
+  /* ARCH */
+  .arch-section { padding: 100px 0; background: linear-gradient(to bottom, var(--bg), var(--bg2), var(--bg)); }
+  .arch-diagram {
+    margin-top: 3rem; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: 16px; padding: 3rem;
+    position: relative; overflow: hidden;
+  }
+  .arch-diagram::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .arch-aws { border: 1px dashed rgba(249,115,22,0.2); border-radius:12px; padding:2rem; position:relative; }
+  .arch-aws-label {
+    position:absolute; top:-12px; left:20px; background:var(--bg3);
+    padding:0 12px; font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+    color:var(--accent); letter-spacing:0.1em;
+  }
+  .arch-vpc {
+    border:1px dashed rgba(59,130,246,0.2); border-radius:8px; padding:1.5rem;
+    position:relative; margin-top:1rem;
+  }
+  .arch-vpc-label {
+    position:absolute; top:-10px; left:14px; background:var(--bg3);
+    padding:0 10px; font-family:'JetBrains Mono',monospace; font-size:0.65rem;
+    color:var(--blue); letter-spacing:0.05em;
+  }
+  .subnet-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+  .subnet { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:6px; padding:1rem; }
+  .subnet-name { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--muted); letter-spacing:0.08em; margin-bottom:0.6rem; }
+  .service-box {
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.03); border-radius:6px;
+    padding:10px 14px; margin:6px 0;
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text);
+    transition:all 0.2s;
+  }
+  .service-box:hover { background:rgba(249,115,22,0.05); }
+  .arch-bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem; }
+  .connector { display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:1.2rem; margin:4px 0; }
+
+  /* FINOPS */
+  .finops-section { padding:100px 0; background:linear-gradient(135deg, var(--bg) 0%, #0d1628 50%, var(--bg) 100%); }
+  .finops-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; margin-top:3rem; }
+  .flow-step {
+    display:flex; align-items:flex-start; gap:1.2rem;
+    padding:1.4rem; border-radius:10px; transition:all 0.25s; position:relative;
+  }
+  .flow-step:hover { background:rgba(249,115,22,0.04); }
+  .step-num {
+    width:36px; height:36px; flex-shrink:0;
+    background:rgba(249,115,22,0.1); border:1px solid rgba(249,115,22,0.3);
+    border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono',monospace; font-size:0.8rem; color:var(--accent);
+  }
+  .flow-step h4 { font-size:0.95rem; margin-bottom:4px; }
+  .flow-step p { font-size:0.78rem; color:var(--muted); font-family:'JetBrains Mono',monospace; line-height:1.5; }
+  .slack-preview {
+    background:#1a1d21; border-radius:12px; padding:1.5rem;
+    border:1px solid #2d3036; font-family:'JetBrains Mono',monospace; font-size:0.8rem;
+  }
+  .slack-header {
+    display:flex; align-items:center; gap:10px; margin-bottom:1rem;
+    padding-bottom:1rem; border-bottom:1px solid #2d3036; color:#72767d; font-size:0.7rem;
+  }
+  .slack-channel { color:#fff; font-weight:600; }
+  .slack-bot { display:flex; align-items:center; gap:10px; margin-bottom:0.8rem; }
+  .bot-avatar { width:36px; height:36px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+  .bot-name { color:#fff; font-weight:600; font-size:0.82rem; }
+  .bot-time { color:#72767d; font-size:0.65rem; margin-left:6px; }
+  .slack-msg { color:#d1d2d3; line-height:1.6; font-size:0.78rem; }
+  .slack-msg strong { color:#fff; }
+  .slack-cost-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:1rem; }
+  .cost-pill { background:#222428; border-radius:6px; padding:10px; text-align:center; }
+  .cost-label { font-size:0.6rem; color:#72767d; margin-bottom:4px; }
+  .cost-val { font-size:0.88rem; color:var(--green); font-weight:600; }
+
+  /* MODULES */
+  .modules-section { padding:100px 0; }
+  .modules-table { width:100%; margin-top:3rem; border-collapse:collapse; border-radius:12px; overflow:hidden; }
+  .modules-table th { background:rgba(249,115,22,0.1); font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--accent); letter-spacing:0.1em; text-align:left; padding:14px 20px; border-bottom:1px solid var(--border); }
+  .modules-table td { padding:14px 20px; border-bottom:1px solid var(--border); font-size:0.88rem; font-family:'JetBrains Mono',monospace; }
+  .modules-table tr { background:var(--bg2); transition:background 0.2s; }
+  .modules-table tr:hover { background:rgba(249,115,22,0.04); }
+  .module-name { color:var(--cyan); }
+  .module-desc { color:var(--muted); }
+
+  /* COST */
+  .cost-section { padding:100px 0; }
+  .cost-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-top:3rem; }
+  .cost-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1.5rem; text-align:center; transition:all 0.25s; }
+  .cost-card:hover { border-color:var(--accent); transform:translateY(-3px); }
+  .cost-resource { font-size:0.7rem; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-bottom:0.5rem; }
+  .cost-type { font-size:0.75rem; color:var(--text); margin-bottom:1rem; }
+  .cost-hr { font-size:1.4rem; font-weight:800; color:var(--accent); }
+  .cost-mo { font-size:0.75rem; color:var(--muted); margin-top:4px; font-family:'JetBrains Mono',monospace; }
+  .cost-total { background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(249,115,22,0.05)); border-color:rgba(249,115,22,0.4); }
+  .cost-total .cost-hr { color:var(--accent2); font-size:1.8rem; }
+
+  /* QUICKSTART */
+  .quickstart-section { padding:100px 0; }
+  .terminal { background:#0a0a0a; border:1px solid #1a1a1a; border-radius:12px; overflow:hidden; margin-top:3rem; }
+  .terminal-bar { background:#111; padding:12px 16px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #1a1a1a; }
+  .dot { width:12px; height:12px; border-radius:50%; }
+  .dot-r { background:#ff5f57; }
+  .dot-y { background:#febc2e; }
+  .dot-g { background:#28c840; }
+  .terminal-title { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:#555; margin-left:auto; }
+  .terminal-body { padding:2rem; font-family:'JetBrains Mono',monospace; font-size:0.82rem; line-height:2; }
+  .t-comment { color:#3d4a5c; }
+  .t-cmd { color:var(--text); }
+  .t-cmd::before { content:'$ '; color:var(--green); }
+  .t-output { color:#718096; padding-left:1rem; }
+  .t-success { color:var(--green); }
+  .t-accent { color:var(--accent); }
+  .t-section { margin-top:1rem; }
+
+  /* STACK */
+  .stack-section { padding:100px 0; background:var(--bg2); }
+  .stack-chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:3rem; }
+  .stack-chip { display:flex; align-items:center; gap:8px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 18px; font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--text); transition:all 0.2s; }
+  .stack-chip:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* INTERVIEW */
+  .interview-section { padding:100px 0; }
+  .qa-grid { display:grid; gap:1.5rem; margin-top:3rem; }
+  .qa-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all 0.25s; }
+  .qa-card:hover { border-color:rgba(249,115,22,0.3); }
+  .qa-q { padding:1.4rem 1.6rem; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .qa-q-icon { width:28px; height:28px; background:rgba(249,115,22,0.1); border:1px solid rgba(249,115,22,0.3); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:var(--accent); flex-shrink:0; font-family:'Space Mono',monospace; }
+  .qa-a { padding:0 1.6rem 1.4rem; font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--muted); line-height:1.7; border-top:1px solid var(--border); padding-top:1rem; display:none; }
+  .qa-card.open .qa-a { display:block; }
+  .qa-highlight { color:var(--cyan); }
+
+  /* FOOTER */
+  footer { padding:4rem 0; text-align:center; border-top:1px solid var(--border); position:relative; z-index:1; }
+  footer .logo-text { font-size:1.5rem; font-weight:800; margin-bottom:1rem; }
+  footer p { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--muted); }
+
+  /* REVEAL */
+  .reveal { opacity:0; transform:translateY(30px); transition:all 0.7s ease; }
+  .revealed { opacity:1; transform:none; }
+
+  @media (max-width: 768px) {
+    .finops-grid, .arch-bottom-row { grid-template-columns:1fr; }
+    .subnet-row { grid-template-columns:1fr; }
+    .slack-cost-row { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="badge">
+    <span class="badge-dot"></span>
+    PRODUCTION-GRADE IaC PLATFORM · v1.0
+  </div>
+  <h1>Cloud<span>Forge</span><br><em>IaC</em></h1>
+  <p class="hero-sub">
+    One command provisions a full production-grade AWS environment — VPC, EC2, RDS, ALB — configured by Ansible, with real-time FinOps cost intelligence delivered to Slack.
+  </p>
+  <div class="hero-tags">
+    <span class="tag tag-tf">⬡ Terraform 1.7</span>
+    <span class="tag tag-aws">☁ AWS</span>
+    <span class="tag tag-ans">▶ Ansible 2.15</span>
+    <span class="tag tag-py">🐍 Python 3.11</span>
+    <span class="tag tag-λ">λ Lambda</span>
+  </div>
+  <div class="hero-btns">
+    <a href="https://github.com/ry347912-cyber/CloudForge-IaC" class="btn-primary">
+      ★ View on GitHub
+    </a>
+    <a href="#quickstart" class="btn-ghost">Quick Start →</a>
+  </div>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <span class="scroll-arrow">↓</span>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="arch-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">01 · Architecture</div>
+      <h2 class="section-title">Three-tier AWS<br>infrastructure</h2>
+      <p style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.85rem;max-width:500px;line-height:1.6;margin-bottom:0;">
+        ALB in public subnets → EC2 in private (no direct internet) → RDS in isolated DB subnets. Security groups enforce least privilege per tier.
+      </p>
+    </div>
+    <div class="arch-diagram reveal">
+      <div class="arch-aws">
+        <div class="arch-aws-label">☁ AWS Account · ap-south-1</div>
+        <div class="arch-vpc">
+          <div class="arch-vpc-label">VPC — 10.0.0.0/16</div>
+          <div class="subnet-row" style="margin-top:0.5rem;">
+            <div class="subnet">
+              <div class="subnet-name">🌐 PUBLIC SUBNET A</div>
+              <div class="service-box"><span>⚖️</span><span>ALB (HTTP/HTTPS)</span></div>
+            </div>
+            <div class="subnet">
+              <div class="subnet-name">🌐 PUBLIC SUBNET B</div>
+              <div class="service-box"><span>🎯</span><span>ALB Target Group</span></div>
+            </div>
+          </div>
+          <div class="connector">↕</div>
+          <div class="subnet-row">
+            <div class="subnet">
+              <div class="subnet-name">🔒 PRIVATE SUBNET A</div>
+              <div class="service-box"><span>🖥️</span><span>EC2 App · t3.micro</span></div>
+            </div>
+            <div class="subnet">
+              <div class="subnet-name">🔒 PRIVATE SUBNET B</div>
+              <div class="service-box"><span>🖥️</span><span>EC2 App · t3.micro</span></div>
+            </div>
+          </div>
+          <div class="connector">↕</div>
+          <div class="subnet">
+            <div class="subnet-name">🗄️ DB SUBNET GROUP</div>
+            <div class="service-box" style="background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);">
+              <span>🐘</span><span style="color:#93c5fd;">RDS PostgreSQL 15 · Multi-AZ · db.t3.micro</span>
+            </div>
+          </div>
+        </div>
+        <div class="arch-bottom-row" style="margin-top:1rem;">
+          <div class="service-box" style="border:1px solid rgba(6,182,212,0.2);background:rgba(6,182,212,0.03);">
+            <span>🪣</span><span style="color:var(--cyan);">S3 — Terraform State + Dashboard Hosting</span>
+          </div>
+          <div class="service-box" style="border:1px solid rgba(168,85,247,0.2);background:rgba(168,85,247,0.03);">
+            <span>λ</span><span style="color:#c084fc;">Lambda · Cost Reporter + CloudWatch Triggers</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINOPS -->
+<section class="finops-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">02 · FinOps Intelligence</div>
+      <h2 class="section-title">Real-time cost dashboard<br>after every deploy</h2>
+      <p style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.6;max-width:500px;">
+        This is what separates this project from 99% of fresher portfolios — FinOps awareness from day one.
+      </p>
+    </div>
+    <div class="finops-grid">
+      <div class="reveal">
+        <div class="flow-step">
+          <div class="step-num">01</div>
+          <div><h4>Cost Explorer Query</h4><p>Lambda queries AWS Cost Explorer API for exact provisioned resources after every terraform apply.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">02</div>
+          <div><h4>Per-service Calculation</h4><p>Calculates hourly + monthly cost breakdown — EC2, RDS, ALB, NAT Gateway, Data Transfer.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">03</div>
+          <div><h4>Slack Notification</h4><p>Posts structured alert to #devops-alerts with cost summary and top cost driver identified.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">04</div>
+          <div><h4>S3 Live Dashboard</h4><p>Renders HTML dashboard on S3 static hosting with 7-day cost trend charts per service.</p></div>
+        </div>
+      </div>
+      <div class="slack-preview reveal">
+        <div class="slack-header">
+          <span>💬</span>
+          <span class="slack-channel">#devops-alerts</span>
+          <span>· Workspace</span>
+        </div>
+        <div class="slack-bot">
+          <div class="bot-avatar">🤖</div>
+          <div><span class="bot-name">FinOps Bot</span><span class="bot-time">just now</span></div>
+        </div>
+        <div class="slack-msg">
+          ✅ <strong>Terraform apply complete!</strong><br><br>
+          Infra deployed to <strong>ap-south-1</strong>.<br>
+          Est. cost: <strong style="color:#4ade80;">$0.13/hr · $91/mo</strong><br>
+          Top driver: <strong style="color:#f87171;">NAT Gateway ($33/mo)</strong><br><br>
+          Dashboard → <span style="color:#60a5fa;text-decoration:underline;">s3://iac-cost-dashboard-prod...</span>
+        </div>
+        <div class="slack-cost-row">
+          <div class="cost-pill"><div class="cost-label">EC2 (2x)</div><div class="cost-val">$10</div></div>
+          <div class="cost-pill"><div class="cost-label">RDS</div><div class="cost-val">$25</div></div>
+          <div class="cost-pill"><div class="cost-label">ALB</div><div class="cost-val">$16</div></div>
+          <div class="cost-pill"><div class="cost-label">NAT GW</div><div class="cost-val" style="color:#f87171;">$33</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section class="modules-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">03 · Terraform Modules</div>
+      <h2 class="section-title">Modular, reusable<br>infrastructure</h2>
+    </div>
+    <table class="modules-table reveal">
+      <thead><tr><th>Module</th><th>Resources Created</th></tr></thead>
+      <tbody>
+        <tr><td><span class="module-name">vpc</span></td><td class="module-desc">VPC, 2 public + 2 private + 2 DB subnets, IGW, NAT Gateway, route tables</td></tr>
+        <tr><td><span class="module-name">security</span></td><td class="module-desc">ALB SG, EC2 SG (allow from ALB only), RDS SG (allow from EC2 only)</td></tr>
+        <tr><td><span class="module-name">ec2</span></td><td class="module-desc">Launch Template, Auto Scaling Group (min 1, max 3), EC2 Key Pair</td></tr>
+        <tr><td><span class="module-name">rds</span></td><td class="module-desc">PostgreSQL 15, Multi-AZ, automated backups, parameter group</td></tr>
+        <tr><td><span class="module-name">alb</span></td><td class="module-desc">Application Load Balancer, HTTP/HTTPS listener, target group, health checks</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- COST -->
+<section class="cost-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">04 · Cost Breakdown</div>
+      <h2 class="section-title">ap-south-1 · Typical costs</h2>
+    </div>
+    <div class="cost-grid reveal">
+      <div class="cost-card"><div class="cost-resource">EC2 (2x)</div><div class="cost-type">t3.micro</div><div class="cost-hr">$0.014<span style="font-size:0.8rem;color:var(--muted);">/hr</span></div><div class="cost-mo">~$10 / month</div></div>
+      <div class="cost-card"><div class="cost-resource">RDS</div><div class="cost-type">db.t3.micro Multi-AZ</div><div class="cost-hr">$0.034<span style="font-size:0.8rem;color:var(--muted);">/hr</span></div><div class="cost-mo">~$25 / month</div></div>
+      <div class="cost-card"><div class="cost-resource">ALB</div><div class="cost-type">Per hour + LCU</div><div class="cost-hr">$0.022<span style="font-size:0.8rem;color:var(--muted);">/hr</span></div><div class="cost-mo">~$16 / month</div></div>
+      <div class="cost-card"><div class="cost-resource">NAT Gateway</div><div class="cost-type">Per hour</div><div class="cost-hr">$0.045<span style="font-size:0.8rem;color:var(--muted);">/hr</span></div><div class="cost-mo">~$33 / month</div></div>
+      <div class="cost-card"><div class="cost-resource">Data Transfer</div><div class="cost-type">Outbound</div><div class="cost-hr">~$0.01<span style="font-size:0.8rem;color:var(--muted);">/hr</span></div><div class="cost-mo">~$7 / month</div></div>
+      <div class="cost-card cost-total"><div class="cost-resource">TOTAL</div><div class="cost-type">All services</div><div class="cost-hr">$0.13<span style="font-size:0.8rem;color:var(--muted);">/hr</span></div><div class="cost-mo" style="color:var(--accent);">~$91 / month</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- QUICKSTART -->
+<section class="quickstart-section" id="quickstart">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">05 · Quick Start</div>
+      <h2 class="section-title">Deploy in<br>3 commands</h2>
+    </div>
+    <div class="terminal reveal">
+      <div class="terminal-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="terminal-title">bash · ~/cloud-iac-project</span>
+      </div>
+      <div class="terminal-body">
+        <div class="t-comment"># Clone the repository</div>
+        <div class="t-cmd">git clone https://github.com/ry347912-cyber/CloudForge-IaC</div>
+        <div class="t-cmd">cd CloudForge-IaC</div>
+        <div class="t-section">
+          <div class="t-comment"># 1. Bootstrap S3 state bucket (one time only)</div>
+          <div class="t-cmd">bash scripts/bootstrap_state.sh</div>
+          <div class="t-output">✅ Bucket created · ✅ Versioning enabled · ✅ AES-256 encryption</div>
+          <div class="t-output">✅ Public access blocked · ✅ DynamoDB lock table ready</div>
+        </div>
+        <div class="t-section">
+          <div class="t-comment"># 2. Provision all AWS infrastructure</div>
+          <div class="t-cmd">terraform -chdir=terraform/environments/prod init && terraform apply</div>
+          <div class="t-output">Apply complete! Resources: 24 added, 0 changed, 0 destroyed.</div>
+          <div class="t-success">alb_dns_name  = "prod-alb-1234567.ap-south-1.elb.amazonaws.com"</div>
+          <div class="t-success">dashboard_url = "http://iac-cost-dashboard-prod.s3-website..."</div>
+        </div>
+        <div class="t-section">
+          <div class="t-comment"># 3. Configure servers with Ansible</div>
+          <div class="t-cmd">ansible-playbook -i ansible/inventories/prod.ini ansible/playbooks/site.yml</div>
+          <div class="t-success">10.0.1.10 : ok=18 changed=12 unreachable=0 failed=0</div>
+          <div class="t-accent">💰 Slack notification sent! Check #devops-alerts for cost breakdown.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section class="interview-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">06 · Interview Prep</div>
+      <h2 class="section-title">Talking points<br>that land</h2>
+    </div>
+    <div class="qa-grid reveal">
+      <div class="qa-card open">
+        <div class="qa-q" onclick="toggleQA(this)">
+          <div class="qa-q-icon">Q1</div>
+          Walk me through your Terraform state management
+        </div>
+        <div class="qa-a"><span class="qa-highlight">Remote state in S3 with DynamoDB locking</span> — prevents concurrent apply conflicts in team settings. S3 versioning lets you roll back to any previous state. The bootstrap script provisions both before first init.</div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleQA(this)">
+          <div class="qa-q-icon">Q2</div>
+          How does your VPC design handle security?
+        </div>
+        <div class="qa-a"><span class="qa-highlight">Three-tier isolation</span> — ALB in public subnets, EC2 in private (no direct internet), RDS in DB subnets with no route to IGW. Security groups enforce least privilege per tier.</div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleQA(this)">
+          <div class="qa-q-icon">Q3</div>
+          What's your rollback strategy?
+        </div>
+        <div class="qa-a"><span class="qa-highlight">Terraform state history + terraform state rollback</span>. For the app layer, Ansible idempotency means re-running always converges to desired state. ASG handles instance-level failures automatically.</div>
+      </div>
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleQA(this)">
+          <div class="qa-q-icon">Q4</div>
+          Tell me about your FinOps feature
+        </div>
+        <div class="qa-a"><span class="qa-highlight">Lambda polls Cost Explorer after every apply</span>, calculates per-service cost, and posts a structured breakdown to Slack. Dashboard on S3 shows a 7-day cost trend. No engineer should deploy blind to cost.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section class="stack-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">07 · Tech Stack</div>
+      <h2 class="section-title">Built with the<br>right tools</h2>
+    </div>
+    <div class="stack-chips reveal">
+      <div class="stack-chip">⬡ Terraform 1.7</div>
+      <div class="stack-chip">🖥️ AWS EC2</div>
+      <div class="stack-chip">🐘 AWS RDS PostgreSQL</div>
+      <div class="stack-chip">🔗 AWS VPC</div>
+      <div class="stack-chip">⚖️ AWS ALB</div>
+      <div class="stack-chip">λ AWS Lambda</div>
+      <div class="stack-chip">🪣 AWS S3</div>
+      <div class="stack-chip">🔐 AWS IAM</div>
+      <div class="stack-chip">💰 Cost Explorer API</div>
+      <div class="stack-chip">▶ Ansible 2.15</div>
+      <div class="stack-chip">🐍 Python 3.11 + boto3</div>
+      <div class="stack-chip">⚙️ Nginx</div>
+      <div class="stack-chip">🔄 GitHub Actions</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="logo-text">Cloud<span style="color:var(--accent);">Forge</span><span style="background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">IaC</span></div>
+    <p>Production-grade IaC Platform · Terraform + Ansible + AWS + FinOps</p>
+    <p style="margin-top:0.5rem;">Built by <span style="color:var(--accent);">ry347912-cyber</span> · <a href="https://github.com/ry347912-cyber/CloudForge-IaC" style="color:var(--blue);text-decoration:none;">github.com/ry347912-cyber/CloudForge-IaC</a></p>
+  </div>
+</footer>
+
+<script>
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function animCursor(){
+  rx+=(mx-rx)*0.15; ry+=(my-ry)*0.15;
+  cursor.style.transform=`translate(${mx-6}px,${my-6}px)`;
+  ring.style.transform=`translate(${rx-18}px,${ry-18}px)`;
+  requestAnimationFrame(animCursor);
+})();
+
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('revealed');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+function toggleQA(el){el.closest('.qa-card').classList.toggle('open');}
+</script>
+</body>
+</html>
